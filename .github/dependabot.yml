@@ -1,0 +1,56 @@
+# Dependabot configuration file for EfikCoin Eternal ecosystem
+# See documentation: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Enable version updates for npm (Node.js) – adjust if you use yarn/pnpm
+  - package-ecosystem: "npm"
+    directory: "/"               # Location of package.json
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Africa/Lagos"    # Or your local timezone
+    open-pull-requests-limit: 10
+    target-branch: "main"
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    reviewers:
+      - "Efikcoinofficialecosystem"   # Replace with your GitHub username
+    assignees:
+      - "Efikcoinofficialecosystem"
+    ignore:
+      - dependency-name: "web3"
+        versions: ["1.x"]              # Example: ignore major updates for web3
+    # Allow security updates only for production dependencies (optional)
+    # security-updates-only: false
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci(deps)"
+
+  # If you use other ecosystems, add them below
+  # - package-ecosystem: "pip"       # Python
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  # - package-ecosystem: "docker"     # Docker
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  # - package-ecosystem: "gomod"      # Go modules
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
