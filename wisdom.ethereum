@@ -1,0 +1,55 @@
+async function connectWallet() {
+    // Check if MetaMask is installed (with retry)
+    if (typeof window.ethereum === 'undefined') {
+        // MetaMask not detected – show a clear message
+        setError('⚠️ MetaMask not detected. Please install it from https://metamask.io');
+        return;
+    }
+
+    try {
+        setStatus('<span class="loading"></span> Requesting connection...');
+        
+        // Request accounts – this triggers the MetaMask popup
+        const accounts = await window.ethereum.request({ 
+            method: 'eth_requestAccounts' 
+        });
+
+        if (accounts.length === 0) {
+            setError('No accounts returned. Please unlock MetaMask and try again.');
+            return;
+        }
+
+        // Success – now initialize ethers
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+        userAddressEl.innerText = userAddress;
+
+        // Update UI
+        connectionIndicator.className = 'w-3 h-3 rounded-full bg-green-500';
+        connectionStatus.innerText = 'Connected';
+
+        // Check network
+        const network = await provider.getNetwork();
+        if (network.chainId !== 56n) {
+            await switchToBSC();
+        } else {
+            networkStatus.innerText = '✅ BSC Mainnet';
+        }
+
+        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+        await loadTokenInfo();
+        await loadUserBalance();
+        await checkOwner();
+
+        setSuccess('✅ Wallet connected!');
+    } catch (error) {
+        console.error(error);
+        if (error.code === 4001) {
+            setError('Connection rejected by user.');
+        } else {
+            setError('Connection failed: ' + error.message);
+        }
+    }
+}
