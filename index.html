@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EfikCoin Eternal – Admin & Help</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <!-- Web3Modal for multi-wallet support -->
+    <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.8/dist/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+    <style>
+        body { background: #0a0a0a; color: #e5e5e5; font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(20,20,20,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,215,0,0.15); border-radius: 1.5rem; }
+        .btn { transition: all 0.2s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(255,215,0,0.3); }
+        .admin-only { display: none; }
+        .show-admin { display: block; }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+    <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 bg-clip-text text-transparent">
+                EfikCoin Eternal
+            </h1>
+            <p class="text-gray-400 mt-2 text-lg">ECE · Decentralized Finance for Humanity</p>
+            <p class="text-sm text-gray-500 break-all mt-2 font-mono bg-gray-800/50 p-2 rounded-xl inline-block">
+                Contract: 0x9F8C29E496ECB6C39c221458f211234DfCB233E0
+            </p>
+        </div>
+
+        <!-- Wallet Connection Panel -->
+        <div class="glass-card p-5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div id="connectionIndicator" class="w-3 h-3 rounded-full bg-red-500"></div>
+                <span id="connectionStatus" class="font-medium text-gray-300">Not connected</span>
+                <span id="networkStatus" class="text-sm text-gray-500"></span>
+            </div>
+            <div class="flex gap-3">
+                <button id="connectBtn" class="btn bg-amber-500 hover:bg-amber-600 text-black px-6 py-2.5 rounded-full text-sm font-bold shadow-lg">
+                    🔌 Connect Wallet
+                </button>
+                <button id="switchNetworkBtn" class="btn bg-gray-700 hover:bg-gray-600 text-white px-5 py-2.5 rounded-full text-sm shadow-lg hidden">
+                    🔄 Switch to BSC
+                </button>
+            </div>
+        </div>
+
+        <!-- User Info (visible when connected) -->
+        <div id="userInfo" class="glass-card p-5 hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <p class="text-gray-400 text-sm"><span class="font-mono">👤 Connected Address</span></p>
+                    <p id="userAddress" class="font-mono text-sm break-all bg-black/30 p-2 rounded-lg"></p>
+                </div>
+                <div class="text-right">
+                    <p class="text-gray-400 text-sm">💰 Your ECE Balance</p>
+                    <p id="userBalance" class="text-2xl font-bold text-amber-400">0</p>
+                </div>
+                <button id="refreshBalance" class="btn bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm">
+                    🔄 Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard (only visible to contract owner) -->
+        <div id="adminDashboard" class="glass-card p-5 border-2 border-amber-500/50 hidden">
+            <h2 class="text-2xl font-bold text-amber-400 mb-4 flex items-center gap-2">
+                <span class="text-3xl">👑</span> Founder's Control Panel
+            </h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <!-- Token Stats -->
+                <div class="bg-black/30 p-4 rounded-xl">
+                    <h3 class="font-semibold text-amber-300 mb-2">📊 Live Stats</h3>
+                    <p>Total Supply: <span id="totalSupply" class="text-white font-mono">-</span></p>
+                    <p>Total Staked: <span id="totalStaked" class="text-white font-mono">-</span></p>
+                    <p>Your Balance: <span id="ownerBalance" class="text-white font-mono">-</span></p>
+                    <p>Holders: <span id="holderCount" class="text-white font-mono">-</span></p>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-black/30 p-4 rounded-xl">
+                    <h3 class="font-semibold text-amber-300 mb-2">⚡ Quick Actions</h3>
+                    <button id="mintBtn" class="btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg w-full mb-2">🔨 Mint Tokens</button>
+                    <button id="airdropBtn" class="btn bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg w-full mb-2">📦 Airdrop</button>
+                    <button id="setPairBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg w-full">🔗 Set Pair</button>
+                </div>
+
+                <!-- Admin Message (simple broadcast) -->
+                <div class="bg-black/30 p-4 rounded-xl md:col-span-2">
+                    <h3 class="font-semibold text-amber-300 mb-2">📢 Broadcast Message</h3>
+                    <textarea id="adminMessage" rows="2" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white" placeholder="Enter a message for visitors..."></textarea>
+                    <button id="publishMessage" class="btn bg-amber-500 hover:bg-amber-600 text-black px-4 py-2 rounded-lg mt-2">Publish</button>
+                    <p class="text-xs text-gray-400 mt-1">This message will be shown in the Help section.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help & Support Section -->
+        <div class="glass-card p-5">
+            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center gap-2">
+                <span class="text-3xl">❓</span> Help & Support
+            </h2>
+            <div id="globalMessage" class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl mb-4">
+                <p class="text-amber-300 font-semibold">📢 Announcement</p>
+                <p id="displayMessage" class="text-gray-300">Welcome to EfikCoin Eternal! For assistance, reach out via the channels below.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4">
+                <a href="#" onclick="window.open('https://t.me/your_telegram', '_blank')" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-xl text-center transition">
+                    <span class="text-3xl">📱</span>
+                    <p class="font-semibold mt-2">Telegram</p>
+                    <p class="text-sm text-gray-400">Join our community</p>
+                </a>
+                <a href="#" onclick="window.open('https://discord.gg/your_discord', '_blank')" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-xl text-center transition">
+                    <span class="text-3xl">💬</span>
+                    <p class="font-semibold mt-2">Discord</p>
+                    <p class="text-sm text-gray-400">Chat with the team</p>
+                </a>
+                <a href="mailto:support@efikcoin.org" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-xl text-center transition">
+                    <span class="text-3xl">📧</span>
+                    <p class="font-semibold mt-2">Email</p>
+                    <p class="text-sm text-gray-400">support@efikcoin.org</p>
+                </a>
+            </div>
+            <p class="text-center text-gray-500 text-sm mt-4">Need help connecting your wallet? Make sure you have MetaMask or Trust Wallet installed, then click the Connect button.</p>
+        </div>
+
+        <!-- Staking Preview (minimal) -->
+        <div class="glass-card p-5">
+            <h2 class="text-xl font-bold mb-3">🔒 Staking Overview</h2>
+            <p class="text-gray-400">Stake ECE and earn up to 125% APR. Lock periods: 30d · 60d · 90d · 180d · 365d.</p>
+            <div class="flex justify-between mt-4">
+                <span>Total Staked: <span id="stakingTotal">0 ECE</span></span>
+                <span>Your Stake: <span id="yourStake">0 ECE</span></span>
+            </div>
+        </div>
+
+        <!-- Transaction History Quick Link -->
+        <div class="glass-card p-5 text-center">
+            <p class="text-gray-400">📋 View detailed transaction history on our <a href="/Efikcoin-Eternal/tx-history" class="text-amber-400 underline">dedicated page</a>.</p>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const CONTRACT_ADDRESS = "0x9F8C29E496ECB6C39c221458f211234DfCB233E0";
+        const OWNER_ADDRESS = "0xc5ad5cfcf81ad63a94227334b898eafce6b27cca";
+        // Minimal ABI (expand as needed)
+        const ABI = [
+            "function name() view returns (string)",
+            "function symbol() view returns (string)",
+            "function decimals() view returns (uint8)",
+            "function totalSupply() view returns (uint256)",
+            "function balanceOf(address) view returns (uint256)",
+            "function transfer(address to, uint256 amount) returns (bool)",
+            "function mint(address to, uint256 amount) external",
+            "function owner() view returns (address)",
+            // Add staking functions if they exist – adjust accordingly
+            "function totalStaked() view returns (uint256)",
+            "function stakedBalance(address) view returns (uint256)"
+        ];
+
+        // ==================== STATE ====================
+        let provider, signer, contract, userAddress;
+        let web3Modal;
+
+        // ==================== DOM ====================
+        const connectBtn = document.getElementById('connectBtn');
+        const switchNetworkBtn = document.getElementById('switchNetworkBtn');
+        const connectionIndicator = document.getElementById('connectionIndicator');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const networkStatus = document.getElementById('networkStatus');
+        const userInfo = document.getElementById('userInfo');
+        const userAddressEl = document.getElementById('userAddress');
+        const userBalanceEl = document.getElementById('userBalance');
+        const refreshBalanceBtn = document.getElementById('refreshBalance');
+        const adminDashboard = document.getElementById('adminDashboard');
+        const totalSupplyEl = document.getElementById('totalSupply');
+        const totalStakedEl = document.getElementById('totalStaked');
+        const ownerBalanceEl = document.getElementById('ownerBalance');
+        const holderCountEl = document.getElementById('holderCount');
+        const mintBtn = document.getElementById('mintBtn');
+        const airdropBtn = document.getElementById('airdropBtn');
+        const setPairBtn = document.getElementById('setPairBtn');
+        const adminMessage = document.getElementById('adminMessage');
+        const publishMessage = document.getElementById('publishMessage');
+        const displayMessage = document.getElementById('displayMessage');
+        const stakingTotal = document.getElementById('stakingTotal');
+        const yourStake = document.getElementById('yourStake');
+
+        // ==================== INIT WEB3MODAL ====================
+        function initWeb3Modal() {
+            const providerOptions = {
+                walletconnect: {
+                    package: WalletConnectProvider.default,
+                    options: {
+                        rpc: {
+                            56: "https://bsc-dataseed.binance.org/"
+                        }
+                    }
+                }
+            };
+            web3Modal = new Web3Modal.default({
+                cacheProvider: true,
+                providerOptions,
+                theme: "dark"
+            });
+        }
+
+        // ==================== CONNECT WALLET ====================
+        async function connectWallet() {
+            try {
+                const instance = await web3Modal.connect();
+                provider = new ethers.providers.Web3Provider(instance);
+                signer = provider.getSigner();
+                userAddress = await signer.getAddress();
+
+                // Check network
+                const network = await provider.getNetwork();
+                if (network.chainId !== 56) {
+                    // try switching
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x38' }]
+                        });
+                    } catch (e) {
+                        if (e.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: '0x38',
+                                    chainName: 'BNB Smart Chain',
+                                    nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                                    rpcUrls: ['https://bsc-dataseed.binance.org/']
+                                }]
+                            });
+                        }
+                    }
+                    // after adding, provider might need refresh – reload
+                    window.location.reload();
+                }
+
+                contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+                updateUI();
+                setupEventListeners(instance);
+            } catch (error) {
+                console.error(error);
+                alert('Connection failed: ' + error.message);
+            }
+        }
+
+        // ==================== UPDATE UI ====================
+        async function updateUI() {
+            if (!contract || !userAddress) return;
+
+            // Update connection indicator
+            connectionIndicator.className = 'w-3 h-3 rounded-full bg-green-500';
+            connectionStatus.innerText = 'Connected';
+            userAddressEl.innerText = userAddress;
+            userInfo.classList.remove('hidden');
+
+            // Fetch basic info
+            try {
+                const decimals = await contract.decimals();
+                const balance = await contract.balanceOf(userAddress);
+                userBalanceEl.innerText = ethers.utils.formatUnits(balance, decimals) + ' ECE';
+
+                const totalSupply = await contract.totalSupply();
+                totalSupplyEl.innerText = ethers.utils.formatUnits(totalSupply, decimals) + ' ECE';
+
+                // Check if owner
+                const owner = await contract.owner();
+                if (userAddress.toLowerCase() === owner.toLowerCase()) {
+                    adminDashboard.classList.remove('hidden');
+                    adminDashboard.classList.add('show-admin');
+                    // load owner-specific data
+                    const ownerBal = await contract.balanceOf(owner);
+                    ownerBalanceEl.innerText = ethers.utils.formatUnits(ownerBal, decimals) + ' ECE';
+                    // try to get totalStaked if available
+                    try {
+                        const staked = await contract.totalStaked();
+                        totalStakedEl.innerText = ethers.utils.formatUnits(staked, decimals) + ' ECE';
+                    } catch (e) { totalStakedEl.innerText = 'N/A'; }
+                    // holder count? maybe not available
+                    holderCountEl.innerText = 'Coming soon';
+                }
+
+                // Staking info
+                try {
+                    const stakedBal = await contract.stakedBalance(userAddress);
+                    yourStake.innerText = ethers.utils.formatUnits(stakedBal, decimals) + ' ECE';
+                    const totalStaked = await contract.totalStaked();
+                    stakingTotal.innerText = ethers.utils.formatUnits(totalStaked, decimals) + ' ECE';
+                } catch (e) { /* ignore */ }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function setupEventListeners(providerInstance) {
+            providerInstance.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    disconnect();
+                } else {
+                    userAddress = accounts[0];
+                    updateUI();
+                }
+            });
+            providerInstance.on('chainChanged', (chainId) => {
+                window.location.reload();
+            });
+        }
+
+        function disconnect() {
+            userAddress = null;
+            contract = null;
+            userInfo.classList.add('hidden');
+            adminDashboard.classList.add('hidden');
+            connectionIndicator.className = 'w-3 h-3 rounded-full bg-red-500';
+            connectionStatus.innerText = 'Not connected';
+            userAddressEl.innerText = '';
+            userBalanceEl.innerText = '0';
+            web3Modal.clearCachedProvider();
+        }
+// Replace these with your REAL Telegram, Discord, Email
+<a href="#" onclick="window.open('https://t.me/efikcoinofficialecosystem', '_blank')">
+<a href="#" onclick="window.open('https://discord.gg/Ub4vvudcV', '_blank')">
+<a href="mailto:Efikcoinofficial1@outlook.com"> // Efikcoinofficialecosystem@gmail.com
+        // ==================== EVENT LISTENERS ====================
+        connectBtn.addEventListener('click', connectWallet);
+        refreshBalanceBtn.addEventListener('click', updateUI);
+
+        // Admin actions (simplified – just show modals)
+        mintBtn.addEventListener('click', () => {
+            alert('Minting function – implement with a proper form');
+        });
+        airdropBtn.addEventListener('click', () => {
+            alert('Airdrop function – implement with CSV upload');
+        });
+        setPairBtn.addEventListener('click', () => {
+            alert('Set pair address function');
+        });
+
+        // Broadcast message (store in localStorage for demo)
+        publishMessage.addEventListener('click', () => {
+            const msg = adminMessage.value.trim();
+            if (msg) {
+                localStorage.setItem('efikMessage', msg);
+                displayMessage.innerText = msg;
+                adminMessage.value = '';
+            }
+        });
+
+        // Load stored message
+        const savedMsg = localStorage.getItem('efikMessage');
+        if (savedMsg) displayMessage.innerText = savedMsg;
+
+        // Switch network (manual)
+        switchNetworkBtn.addEventListener('click', async () => {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x38' }]
+                });
+            } catch (e) {
+                if (e.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0x38',
+                            chainName: 'BNB Smart Chain',
+                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                            rpcUrls: ['https://bsc-dataseed.binance.org/']
+                        }]
+                    });
+                }
+            }
+        });
+
+        // Auto-connect if cached
+        window.addEventListener('load', () => {
+            initWeb3Modal();
+            if (web3Modal.cachedProvider) {
+                connectWallet();
+            }
+        });
+    </script>
+</body>
+</html>
