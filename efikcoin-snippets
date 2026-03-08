@@ -1,0 +1,11 @@
+efikcoin-snippets/
+├── web3/
+│   ├── connect-wallet.js
+│   └── contract-interaction.js
+├── staking/
+│   ├── stake-tokens.js
+│   └── calculate-rewards.js
+├── airdrop/
+│   ├── csv-parser.js
+│   └── batch-transfer.js
+└── README.md
