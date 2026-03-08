@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EfikCoin Eternal – Live Blockchain Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-4xl font-bold text-amber-400 text-center">EfikCoin Eternal</h1>
+        <p class="text-center text-gray-400 mb-6">ECE · Live Blockchain Dashboard</p>
+
+        <!-- Connection Bar -->
+        <div class="bg-gray-800 rounded-xl p-4 flex justify-between items-center mb-6">
+            <div>
+                <span id="connectionStatus" class="text-red-400">🔴 Not connected</span>
+                <span id="networkStatus" class="ml-2 text-sm"></span>
+            </div>
+            <button id="connectBtn" class="bg-amber-500 hover:bg-amber-600 text-black px-6 py-2 rounded-full">Connect Wallet</button>
+        </div>
+
+        <!-- User Info -->
+        <div id="userInfo" class="bg-gray-800 rounded-xl p-4 mb-6 hidden">
+            <div class="flex justify-between">
+                <span class="text-gray-400">Address: <span id="userAddress" class="text-white font-mono"></span></span>
+                <span class="text-gray-400">ECE Balance: <span id="userBalance" class="text-amber-400 font-bold"></span></span>
+                <span class="text-gray-400">BNB Balance: <span id="bnbBalance" class="text-amber-400 font-bold"></span></span>
+            </div>
+        </div>
+
+        <!-- Stats Cards (live from backend) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gray-800 p-4 rounded-xl text-center">
+                <p class="text-gray-400">ECE Price</p>
+                <p class="text-xl font-bold" id="ecePrice">Loading...</p>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-xl text-center">
+                <p class="text-gray-400">Market Cap</p>
+                <p class="text-xl font-bold" id="marketCap">-</p>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-xl text-center">
+                <p class="text-gray-400">Total Supply</p>
+                <p class="text-xl font-bold" id="totalSupply">-</p>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-xl text-center">
+                <p class="text-gray-400">Holders</p>
+                <p class="text-xl font-bold" id="holdersCount">-</p>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="bg-gray-800 p-4 rounded-xl mb-6">
+            <canvas id="priceChart"></canvas>
+        </div>
+
+        <!-- Staking Section (live) -->
+        <div class="bg-gray-800 p-4 rounded-xl mb-6">
+            <h2 class="text-xl font-bold mb-4">🔒 Staking Pool</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <p>Your Stake: <span id="userStake">0 ECE</span></p>
+                    <p>Total Staked: <span id="totalStaked">0 ECE</span></p>
+                    <button id="stakeBtn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded mt-2">Stake</button>
+                </div>
+                <div>
+                    <p>Lock periods: 30, 60, 90, 180, 365 days</p>
+                    <p>APR up to 125%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel (visible only to owner, hidden by default) -->
+        <div id="adminPanel" class="bg-gray-800 p-4 rounded-xl mb-6 border-2 border-amber-500 hidden">
+            <h2 class="text-2xl font-bold text-amber-400 mb-4">👑 Admin Dashboard</h2>
+            <div class="grid md:grid-cols-3 gap-4">
+                <button id="adminMint" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Mint Tokens</button>
+                <button id="adminAirdrop" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded">Airdrop</button>
+                <button id="adminSetPair" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Set Pair</button>
+                <button id="adminCollectFees" class="bg-amber-600 hover:bg-amber-700 px-4 py-2 rounded">Collect Fees</button>
+            </div>
+            <div class="mt-4">
+                <textarea id="broadcastMsg" rows="2" class="w-full bg-gray-700 p-2 rounded" placeholder="Broadcast message..."></textarea>
+                <button id="adminBroadcast" class="bg-amber-500 hover:bg-amber-600 text-black px-4 py-2 rounded mt-2">Publish</button>
+            </div>
+            <div id="adminLogs" class="mt-4 text-sm"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-gray-500 text-sm">
+            © 2025 EfikCoin Eternal · Live on BSC · Secure backend
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
