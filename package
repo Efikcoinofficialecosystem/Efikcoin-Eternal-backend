@@ -1,0 +1,20 @@
+Efikcoin-Eternal-backend/           (this is your repository root)
+├── backend/                         (folder – name exactly "backend")
+│   ├── package.json
+│   ├── server.js
+│   ├── database.js
+│   ├── routes/                      (folder – name exactly "routes")
+│   │   ├── api.js
+│   │   └── admin.js
+│   └── .env                         (create locally, but DO NOT commit – add to .gitignore)
+├── .gitignore                        (file – to ignore node_modules, .env, etc.)
+└── README.md                         (optional, but recommended)
+
+No extra "your-project" folder – just place the backend folder directly at the repository root.
+
+After creating these files, push to GitHub. Then in Render, set:
+- **Root Directory:** `backend`
+- **Build Command:** `npm install`
+- **Start Command:** `node server.js`
+
+Add environment variables in Render dashboard (same as .env). That's all.
