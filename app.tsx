@@ -4,6 +4,7 @@ import { useAccount } from "wagmi";
 import { SendTransaction } from "./components/sendTransaction";
 import { Balance } from "./components/getBalance";
 import { SwitchChain } from "./components/switchNetwork";
+import { Analytics } from "@vercel/analytics/react";
 function App() {
   const { connect, isConnected, connectorName, loading: connectLoading, error: connectError } = useWeb3AuthConnect();
   // IMP START - Logout
@@ -77,6 +78,7 @@ function App() {
           Source code
         </a>
       </footer>
+      <Analytics />
     </div>
   );
 }
